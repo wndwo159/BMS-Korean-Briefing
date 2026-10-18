@@ -19,7 +19,9 @@ from briefing_render import render, metadata
 from military_terms import REVISION, spans as protected_spans
 from ollama_manager import Manager as OllamaManager, local_url
 ollama_manager=OllamaManager()
-TOKEN = re.compile(r'\b(?:(?:Maj\.|Lt\.|Cpt\.|Capt\.|2Lt\.|1Lt\.)[ ]+[A-Za-z]+(?:[ ]+[A-Z][A-Za-z]+)*|[A-Za-z][A-Za-z0-9/-]*\d[A-Za-z0-9/.-]*|[A-Z]{2,}|\d+(?:[.:,/-]\d+)*(?:[A-Za-z]+)?)(?:\s+(?:MHz|FT|NM|KT|ft|nm|km|kts|deg|mm))?\b', re.ASCII)
+# BMS can join identifiers to prose (P-12or, M-1992anti-aircraft).
+# The lookahead branch has its own boundary so the actual identifier stays protected.
+TOKEN = re.compile(r'\b[A-Z]+-\d+(?=anti-aircraft\b|or\b)|\b(?:(?:Maj\.|Lt\.|Cpt\.|Capt\.|2Lt\.|1Lt\.)[ ]+[A-Za-z]+(?:[ ]+[A-Z][A-Za-z]+)*|[A-Za-z][A-Za-z0-9/-]*\d[A-Za-z0-9/.-]*|[A-Z]{2,}|\d+(?:[.:,/-]\d+)*(?:[A-Za-z]+)?)(?:\s+(?:MHz|FT|NM|KT|ft|nm|km|kts|deg|mm))?\b', re.ASCII)
 
 def atomic(path, text):
     path.parent.mkdir(parents=True, exist_ok=True)

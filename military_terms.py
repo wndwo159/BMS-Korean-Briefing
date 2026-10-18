@@ -1,7 +1,7 @@
 """Deterministic proper names shared by every translation provider."""
 import re
 
-REVISION = 'military-terms-v4'
+REVISION = 'military-terms-v5'
 TERMS = {
     'Pyeongtaek AAF': '평택 육군비행장(AAF)',
     'Pyeongtaek': '평택', 'Osan': '오산', 'Kunsan': '군산',
@@ -17,7 +17,7 @@ TERMS = {
 KNOWN = re.compile(r'\b(?:' + '|'.join(re.escape(t) for t in sorted(TERMS, key=len, reverse=True)) + r')\b', re.I | re.ASCII)
 # Unknown airfields remain English instead of guessing their Korean names.
 AIRFIELD = r"\b(?:Camp[ \t]+)?[A-Z][A-Za-z'-]*[ \t]+(?:AAF|AFB|AB)\b"
-EQUIPMENT = r'\b\d+x +(?:AIM-|AGM-|GBU-|CBU-|Mk-|AN/|Tank\b|\d+mm\b)[^\t\r\n]+'
+EQUIPMENT = r'\b\d+x +(?:AIM-|AGM-|GBU-|CBU-|Mk-|AN/|Tank\b|Python-|Spice\b|\d+mm\b)[^\t\r\n]+'
 LOOKUP = {k.lower(): v for k, v in TERMS.items()}
 
 
@@ -42,6 +42,6 @@ def spans(text, token_pattern, glossary):
 
 def loadout(text):
     # Equipment rows are data, not prose. Keep unrecognized names intact.
-    if re.fullmatch(r'\d+x\s+(?:AIM-|AGM-|GBU-|CBU-|Mk-|AN/|Tank\b|\d+mm\b).+', text, re.I):
+    if re.fullmatch(r'\d+x\s+(?:AIM-|AGM-|GBU-|CBU-|Mk-|AN/|Tank\b|Python-|Spice\b|\d+mm\b).+', text, re.I):
         return replace_known(text).replace('Tank ', '연료탱크 ')
     return None

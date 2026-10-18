@@ -62,8 +62,8 @@ def render(soup):
 def metadata(text):
     def extract(pattern,default='—'):
         m=re.search(pattern,text,re.M);return m.group(1).strip() if m else default
-    return {'callsign':extract(r'^\s*([A-Za-z][A-Za-z0-9]+)\s+\([A-Z]+\)'),
-            'mission':extract(r'^\s*[A-Za-z][A-Za-z0-9]+\s+\(([A-Z]+)\)'),
+    return {'callsign':extract(r'^\s*([A-Za-z][A-Za-z0-9]+)\s+\([A-Z][A-Z0-9 /+-]*\)'),
+            'mission':extract(r'^\s*[A-Za-z][A-Za-z0-9]+\s+\(([A-Z][A-Z0-9 /+-]*)\)'),
             'package':extract(r'^\s*Package #:\s*([^\s(]+)'),
             'tot':extract(r'^\s*Time on Target:\s*(\S+)'),
             'generated':extract(r'BRIEFING RECORD generated at (.+?)\.')}

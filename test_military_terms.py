@@ -4,6 +4,34 @@ from offline_translation import OfflineTranslator
 from military_terms import spans
 
 
+def test_israel_print_reviewed_cells_preserve_identifiers():
+    from offline_translation import reviewed_translation
+    from briefing_render import metadata
+    cases={
+        'Hatzor ATIS':'Hatzor ATIS',
+        'Hatzor Ground':'Hatzor 지상관제',
+        'Tel Approach':'Tel 접근관제',
+        'Tel Nof Tower':'Tel Nof 관제탑',
+        'Unknown Base Departure':'Unknown Base 출항관제',
+        'Clear sweep area of hostile aircraft':'소탕 구역 내 적기를 제거',
+        '-- M-1992anti-aircraft guns over Al Bar Cape':'-- M-1992 대공포 · Al Bar Cape 일대',
+        'Destroy Radar P-12or other facilities at target site':'Radar P-12 또는 표적 지역의 기타 시설을 파괴',
+        'Tel Nof Airbase, 14 nm south of Tel Aviv':'Tel Nof Airbase, Tel Aviv 남쪽 14 nm',
+        '2x Python-4':'2x Python-4',
+        '4x Spice 2000':'4x Spice 2000',
+        'Box':'상자 대형','Fair':'대체로 맑음',
+        '100%operational':'100% 가동 중',
+        'Intelligence reports the highest impact targets are:':'정보 보고에 따른 주요 타격 표적:',
+    }
+    for en,kr in cases.items():
+        result=reviewed_translation(en,main.TOKEN,{})
+        assert result==kr
+        assert Counter(main.TOKEN.findall(en))==Counter(main.TOKEN.findall(result))
+    meta=metadata('Mission Overview:\n\tPanther5 (OCA STRIKE)\n')
+    assert meta['callsign']=='Panther5'
+    assert meta['mission']=='OCA STRIKE'
+
+
 def test_equipment_and_airfield_never_enter_neural_model():
     translator = OfflineTranslator.__new__(OfflineTranslator)
     translator.fragment = lambda text: (_ for _ in ()).throw(AssertionError(text))
