@@ -1,0 +1,16 @@
+{
+  "BARCAP": "방어선 전투초계(BARCAP)",
+  "HAVCAP": "고가치 항공자산 보호초계(HAVCAP)",
+  "CAP": "전투초계(CAP)",
+  "SEAD": "적 방공망 제압(SEAD)",
+  "DEAD": "적 방공망 파괴(DEAD)",
+  "CAS": "근접항공지원(CAS)",
+  "DCA": "방어 제공(DCA)",
+  "OCA": "공세 제공(OCA)",
+  "AWACS": "공중조기경보통제기(AWACS)",
+  "TOT": "표적 도착 예정시각(TOT)",
+  "RTB": "기지 복귀(RTB)",
+  "STPT": "스티어포인트(STPT)",
+  "TGP": "표적획득 포드(TGP)",
+  "HTS": "대레이더 미사일 표적획득 시스템(HTS)"
+}

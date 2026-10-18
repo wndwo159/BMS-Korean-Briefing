@@ -1,0 +1,53 @@
+name: Windows build and release
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: windows-release
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check release version
+        id: version
+        shell: pwsh
+        run: |
+          $version = python -c "from app_version import VERSION; print(VERSION)"
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$version") { throw 'Tag and app_version.py must match' }
+          "number=$version" >> $env:GITHUB_OUTPUT
+          gh release view "v$version" --repo $env:GITHUB_REPOSITORY 2>$null
+          $publish = $LASTEXITCODE -ne 0
+          "publish=$($publish.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          exit 0
+      - name: Build and test distributable
+        shell: pwsh
+        run: ./build.ps1
+      - name: Publish verified release
+        if: steps.version.outputs.publish == 'true'
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.number }}
+        run: |
+          gh release create "v$env:RELEASE_VERSION" --target $env:GITHUB_SHA --title "BMS Korean Briefing $env:RELEASE_VERSION" --generate-notes --draft "dist/BMS-Korean-Briefing-Setup.exe" "dist/BMS-Korean-Briefing-$env:RELEASE_VERSION-Windows-x64.zip" "dist/BMS-Korean-Briefing-$env:RELEASE_VERSION-source.zip" "release/SHA256SUMS.txt" "release/초기설치안내.html"
+          if ($LASTEXITCODE -ne 0) { throw 'Release asset upload failed' }
+          gh release edit "v$env:RELEASE_VERSION" --draft=false --latest
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-distributable
+          path: |
+            dist/BMS-Korean-Briefing-Setup.exe
+            release/SHA256SUMS.txt
