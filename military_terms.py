@@ -1,7 +1,7 @@
 """Deterministic proper names shared by every translation provider."""
 import re
 
-REVISION = 'military-terms-v3'
+REVISION = 'military-terms-v4'
 TERMS = {
     'Pyeongtaek AAF': '평택 육군비행장(AAF)',
     'Pyeongtaek': '평택', 'Osan': '오산', 'Kunsan': '군산',
@@ -11,6 +11,8 @@ TERMS = {
     'Paveway': '페이브웨이', 'Durandal': '듀랑달',
     'Offensive Counter Air': '공세 제공 작전',
     'Defensive Counter Air': '방어 제공 작전',
+    'Enemy Air': '적기', 'enemy aircraft':'적기',
+    'enemy air defenses':'적 방공망',
 }
 KNOWN = re.compile(r'\b(?:' + '|'.join(re.escape(t) for t in sorted(TERMS, key=len, reverse=True)) + r')\b', re.I | re.ASCII)
 # Unknown airfields remain English instead of guessing their Korean names.

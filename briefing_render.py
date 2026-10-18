@@ -46,6 +46,7 @@ def render(soup):
             for kr,en,error in rows:
                 original=re.split(r'\t+',en.strip());local=re.split(r'\t+',kr.strip())
                 if len(local)!=len(original):local=original
+                if g['source']=='Weather' and original and original[0].strip().rstrip(':')=='Situation':local[0]='기상 상태:'
                 is_header=sum(x.strip().endswith(':') for x in original)>len(original)/2
                 tag='th' if is_header else 'td'
                 result.append('<tr>'+''.join('<'+tag+'>'+pair(k.strip(),e.strip(),error)+'</'+tag+'>' for k,e in zip(local,original))+'</tr>')

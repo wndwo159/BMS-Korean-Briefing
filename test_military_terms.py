@@ -55,3 +55,48 @@ def test_inline_bms_label_uses_reviewed_dictionary():
     translator=OfflineTranslator.__new__(OfflineTranslator);translator.cache={}
     assert translator.fragment('Ext. Time Ref.: No')=='외부 시간 기준: 아니요'
     assert translator.fragment('Flt Lead: Yes')=='편대장: 예'
+
+
+def test_reviewed_military_mistranslations_and_operational_data():
+    from offline_translation import reviewed_translation
+    cases={
+        'No enemy air response is anticipated.':'적기의 대응은 예상되지 않습니다.',
+        'Enemy Air':'적기',
+        'Protect package elements from enemy aircraft':'적기로부터 패키지 소속 편대를 보호',
+        'Osan Ground':'오산 지상관제',
+        'Osan Tower':'오산 관제탑',
+        'Pyeongtaek Approach':'평택 접근관제',
+        'Pre IP':'IP 이전 지점','Turn Pt':'선회 지점',
+        'Ladder':'계단 대형','ArrowHead':'화살촉 대형',
+        '10deg C.':'10deg C. (섭씨)',
+        'Key A: Day2 00:00z':'암호키 A: Day2 00:00z',
+        'Rot/day:':'일일 코드 변경 횟수:',
+    }
+    for en,expected in cases.items():
+        result=reviewed_translation(en,main.TOKEN,{})
+        assert result==expected,(en,result)
+        assert Counter(main.TOKEN.findall(result))==Counter(main.TOKEN.findall(en))
+
+
+def test_reviewed_cells_apply_before_remote_model(tmp_path,monkeypatch):
+    engine=main.Engine(tmp_path/'data',opener=lambda _:None)
+    engine.config.update(provider='ollama',model='test')
+    monkeypatch.setattr(main.httpx,'post',lambda *a,**k:(_ for _ in ()).throw(AssertionError('reviewed text must not reach the model')))
+    try:
+        output=engine.translate('Osan Ground\t253.700 MHz [2]\tNo enemy air response is anticipated.')
+        assert output=='오산 지상관제\t253.700 MHz [2]\t적기의 대응은 예상되지 않습니다.'
+    finally:engine.close()
+
+
+def test_unreviewed_prose_still_requires_model():
+    from offline_translation import reviewed_translation
+    assert reviewed_translation('An unfamiliar briefing sentence.',main.TOKEN,{}) is None
+
+
+def test_weather_situation_label_keeps_original():
+    from briefing_render import render
+    from bs4 import BeautifulSoup
+    soup,_=main.parse(b'Weather:\n\tSituation:\tSunny\tSunny\tSunny\n')
+    body,_=render(soup);doc=BeautifulSoup(body,'lxml')
+    assert doc.select_one('td .kr').get_text()=='기상 상태:'
+    assert doc.select_one('td .en').get_text()=='Situation:'

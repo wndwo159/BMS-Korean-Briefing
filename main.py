@@ -142,6 +142,12 @@ class Engine:
         key=hashlib.sha256(json.dumps([text,c['provider'],c['model'],c['ollama_url'],c['openai_model'],glossary,REVISION,'ollama-setup-v1'],ensure_ascii=False).encode()).hexdigest()
         with self.lock:row=self.db.execute('SELECT v FROM cache WHERE k=?',(key,)).fetchone()
         if row:return row[0]
+        from offline_translation import reviewed_translation
+        output=reviewed_translation(text,TOKEN,glossary)
+        if output is not None:
+            if Counter(TOKEN.findall(output))!=Counter(protected):raise ValueError('숫자/약어 변경 감지')
+            with self.lock:self.db.execute('INSERT OR REPLACE INTO cache VALUES (?,?)',(key,output));self.db.commit()
+            return output
         if c['provider']=='offline':
             if self.offline is None:
                 from offline_translation import OfflineTranslator

@@ -6,6 +6,15 @@ from pathlib import Path
 from military_prose import reviewed
 from military_terms import spans, replace_known, loadout
 
+class NeedsInference(Exception):pass
+
+def reviewed_translation(text,token_pattern,glossary):
+    """Use the same reviewed cells for every provider without loading a model."""
+    translator=OfflineTranslator.__new__(OfflineTranslator)
+    translator.cache={};translator.dictionary_only=True
+    try:return translator.translate(text,token_pattern,glossary)
+    except NeedsInference:return None
+
 LABELS = {
 'GENERAL':'일반 설정(GENERAL)','TIME EVENTS':'시각별 변경(TIME EVENTS)','POS EVENTS':'위치별 변경(POS EVENTS)','FILE A':'설정 파일(FILE A)','FILE B':'설정 파일(FILE B)','END_OF_BRIEFING':'브리핑 끝(END_OF_BRIEFING)','Mission Overview':'임무 개요','Situation':'전장 상황','Pilot Roster':'조종사 편성','Package Elements':'패키지 편성','Threat Analysis':'위협 분석','Steerpoints':'비행계획 / 스티어포인트','Comm Ladder':'통신 계획','Iff':'피아식별 (Iff)','Link 16':'데이터링크 Link 16','Ordnance':'무장 구성','Weather':'기상','Support':'지원 전력','Rules of Engagement':'교전 수칙','Emergency Procedures':'비상 절차',
 'Callsign':'호출부호','Flt Lead':'편대장','Wing Two':'윙맨','Elem Lead':'분대장','Elem Two':'분대 윙맨','Flt #':'편대 번호','Role':'임무 역할','Aircraft':'항공기','Task':'세부 임무','Package #':'패키지 번호','Pkg-Mission':'패키지 임무','Target Area':'표적 지역','Time on Target':'표적 도착시각','Sunrise':'일출','Sunset':'일몰',
@@ -44,6 +53,7 @@ class OfflineTranslator:
         if text in LABELS:return LABELS[text]
         known=reviewed(text)
         if known is not None:return known
+        if getattr(self,'dictionary_only',False):raise NeedsInference()
         pieces=re.split(r'(?<=[.!?])\s+(?=[A-Z])',text)
         output=[]
         for piece in pieces:

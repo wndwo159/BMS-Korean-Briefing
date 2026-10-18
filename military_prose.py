@@ -8,6 +8,13 @@ def location(text):
     return f'{m[3]} {direction} {m[1]}'
 
 FIXED={
+'No enemy air response is anticipated.':'적기의 대응은 예상되지 않습니다.',
+'Enemy CAP aircraft are likely to be operating within operation area.':'작전 구역 내에서 적 전투초계(CAP) 항공기가 활동할 가능성이 있습니다.',
+'Protect package elements from enemy aircraft':'적기로부터 패키지 소속 편대를 보호',
+'Pre IP':'IP 이전 지점','Turn Pt':'선회 지점',
+'Ladder':'계단 대형','ArrowHead':'화살촉 대형','Arrowhead':'화살촉 대형',
+'Line Abreast':'횡대 대형','Trail':'종대 대형',
+'Rot/day':'일일 코드 변경 횟수',
 'x  = Primary Flight':'x = 주 임무 편대',
 'Visually ID unknown aircraft before engaging, unless authorized by AWACS.':'AWACS의 허가가 없는 경우, 미식별 항공기는 교전 전에 육안으로 식별(ID)해야 합니다.',
 'Note: Friendly aircraft may be operating in the area.':'주의: 해당 구역에서 아군 항공기가 활동할 수 있습니다.',
@@ -18,8 +25,22 @@ FIXED={
 
 def reviewed(text):
     if text in FIXED:return FIXED[text]
+    if text.endswith(':') and text[:-1] in FIXED:return FIXED[text[:-1]]+':'
+    m=re.fullmatch(r'(Osan|Pyeongtaek|Kunsan) (Ground|Tower|Approach|Departure|ATIS)',text)
+    if m:
+        base={'Osan':'오산','Pyeongtaek':'평택','Kunsan':'군산'}[m[1]]
+        service={'Ground':'지상관제','Tower':'관제탑','Approach':'접근관제','Departure':'출항관제','ATIS':'ATIS'}[m[2]]
+        return base+' '+service
+    m=re.fullmatch(r'(-?\d+(?:\.\d+)?deg\s+C\.?)',text)
+    if m:return m[1]+' (섭씨)'
+    m=re.fullmatch(r'Key ([AB]):\s*(.+)',text)
+    if m:return f'암호키 {m[1]}: {m[2]}'
+    m=re.fullmatch(r'(.+? \([A-Z0-9]{4}\)), (\d+(?:\.\d+)?\s+(?:nm|km|NM) (?:northwest|northeast|southwest|southeast|north|south|west|east) of .+)',text)
+    if m:return m[1]+', '+location(m[2])
     m=re.fullmatch(r'BRIEFING RECORD generated at (.+)\.',text)
     if m:return '브리핑 생성 기록(BRIEFING RECORD) · '+m[1]+'.'
+    m=re.fullmatch(r'In an effort to obtain air superiority, air command has initiated an Offensive Counter Air operation targeted at the area around (.+?)\. If everything goes as planned, earlier DEAD raids and fighter sweeps will have suppressed or cleared most of the air defenses in the region allowing us to strike several airbases, search radars and command facilities including your target, (.+)\.',text)
+    if m:return f'제공권 확보를 위해 항공 지휘부는 {m[1]} 주변 지역에 대한 공세 제공 작전을 개시했습니다. 계획대로 진행된다면 선행 적 방공망 파괴(DEAD) 공격과 전투기 소탕 작전으로 이 지역 방공망 대부분이 제압되거나 제거될 것입니다. 이에 따라 비행장·탐색 레이더·지휘 시설을 타격할 수 있으며, 귀 편대의 표적은 {m[2]}입니다.'
     m=re.fullmatch(r'Be advised: Starting at (.+?), our ground forces will be making a major push towards (.+)\.',text)
     if m:return f'상황 전파: {m[1]}부터 아군 지상군이 {m[2]} 방면으로 대규모 진격을 실시할 예정입니다.'
     m=re.fullmatch(r'In an effort to obtain air superiority, air command has initiated an Offensive Counter Air operation targeted at the area around (.+?)\. As part of this effort, air command needs you to destroy or suppress the enemy\'s air defenses in an attempt to clear the way for additional strikes\. Your target is the (.+?), located (.+?), which consists of (.+)\.',text)
