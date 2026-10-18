@@ -28,7 +28,8 @@ class Packet{
  zoom(delta){this.zoomValue=Math.min(140,Math.max(80,this.zoomValue+delta*10));document.documentElement.style.setProperty('--paper-width',`min(${940*this.zoomValue/100}px,calc(100vw - 170px))`);document.getElementById('zoom-value').textContent=this.zoomValue+'%';this.paginate()}
  deriveMeta(source){
   const found={};
-  const flight=source.textContent.match(/\b([A-Za-z][A-Za-z0-9]+)\s*\(([A-Z]{2,})\)/);if(flight){found.callsign=flight[1];found.mission=flight[2]}
+  const flight=source.textContent.match(/\b([A-Za-z][A-Za-z0-9]+)\s*\(([A-Z][A-Z0-9 /+-]*)\)/);if(flight){found.callsign=flight[1];found.mission=flight[2]}
+  const context=source.querySelector('[data-bms-theater]');if(context){try{const value=JSON.parse(context.dataset.bmsTheater);if(value&&typeof value==='object')found.theater=value}catch{}}
   for(const row of source.querySelectorAll('tr')){const cells=[...row.cells];if(cells.length<2)continue;const label=(cells[0].querySelector('.en')||cells[0]).textContent;const value=(cells[1].querySelector('.en')||cells[1]).textContent;if(/Package #/i.test(label))found.package=value.match(/^\s*(\S+)/)?.[1];if(/Time on Target/i.test(label))found.tot=value.trim()}
   return found;
  }
@@ -80,8 +81,12 @@ class Packet{
  }
  header(first){
   const header=E('header','page-header'+(first?'':' running-header'));
-  const running=E('div','document-running');running.append(E('span','','FALCON BMS / AIR OPERATIONS'),E('span','','FLIGHT BRIEFING PACKAGE'));header.append(running);
-  const heading=E('div','document-heading');const title=E('h1','','MISSION BRIEFING');title.append(E('span','korean-title','항공작전 임무 브리핑'));const stamp=E('div','document-copy-stamp');stamp.append(E('div','','PREFLIGHT COPY'),E('div','','KOREAN EDITION'));heading.append(title,stamp);header.append(heading);
+  const theater=this.renderMeta.theater||{code:'UNCONFIRMED',label:'전장 미확인',tone:'slate',name:''};
+  const running=E('div','document-running');running.append(E('span','','FALCON BMS / AIR OPERATIONS'),E('span','running-theater','THEATER / '+(theater.name||theater.code)));header.append(running);
+  const heading=E('div','document-heading');const title=E('h1','','MISSION BRIEFING');title.append(E('span','korean-title','항공작전 임무 브리핑'));
+  const stamp=E('div','document-theater');stamp.dataset.tone=['desert','olive'].includes(theater.tone)?theater.tone:'slate';stamp.setAttribute('aria-label','전장: '+theater.label+' · '+(theater.name||'미확인'));
+  stamp.title=theater.source==='bms-registry'?'PRINT 처리 시 BMS에서 선택된 전장 · 저장 문서에 고정':'이 문서에 기록된 전장 정보가 없습니다';
+  stamp.append(E('span','theater-caption','THEATER OF OPERATIONS'),E('strong','theater-code',theater.code),E('span','theater-label',theater.label),E('span','theater-edition',theater.name||'선택된 전장 확인 불가'));heading.append(title,stamp);header.append(heading);
   const fields=E('div','document-identifiers');for(const [key,label]of [['callsign','FLIGHT'],['mission','ROLE'],['package','PKG'],['tot','TOT']]){const value=this.renderMeta[key];if(!value||value==='—')continue;const item=E('span');item.append(E('span','field-label',label),E('strong','',value));fields.append(item)}if(fields.childElementCount)header.append(fields);return header;
  }
  newPage(){

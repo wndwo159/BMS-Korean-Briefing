@@ -8,6 +8,9 @@ def location(text):
     return f'{m[3]} {direction} {m[1]}'
 
 FIXED={
+'Strike':'타격','-- Radar EW Dome':'-- EW 레이더 돔',
+'OCA STRIKE':'공세 제공 타격(OCA STRIKE)',
+'STRIKE':'타격(STRIKE)','SWEEP':'전투기 소탕(SWEEP)','ESCORT':'호위(ESCORT)',
 'No enemy air response is anticipated.':'적기의 대응은 예상되지 않습니다.',
 'Clear sweep area of hostile aircraft':'소탕 구역 내 적기를 제거',
 'Box':'상자 대형','Fair':'대체로 맑음','Attack target':'표적 공격',
@@ -32,6 +35,8 @@ FIXED={
 def reviewed(text):
     if text in FIXED:return FIXED[text]
     if text.endswith(':') and text[:-1] in FIXED:return FIXED[text[:-1]]+':'
+    m=re.fullmatch(r'([A-Za-z][A-Za-z0-9]+) \((OCA STRIKE|STRIKE|SWEEP|ESCORT)\)',text)
+    if m:return m[1]+' ('+FIXED[m[2]]+')'
     m=re.fullmatch(r'(\d+)%operational',text)
     if m:return m[1]+'% 가동 중'
     m=re.fullmatch(r"([A-Z][A-Za-z0-9'(). -]*?) (Ground|Tower|Approach|Departure|ATIS)",text)

@@ -16,6 +16,7 @@ HOME.mkdir(parents=True, exist_ok=True)
 DEFAULTS = dict(kneeboard_first_page=True, kneeboard_aspect='a4', watch_dir=str(BMS_ROOT/'User'/'Briefings'), output_dir=str(BMS_ROOT/'User'/'BriefingKR'), auto_open=True, auto_translate=True, auto_save=True, reuse_window=True, notify=False, force_focus=False, startup=False, provider='offline', model='', ollama_url='http://127.0.0.1:11434', openai_model='gpt-4.1-mini')
 CSS = (Path(__file__).parent/'briefing.css').read_text('utf-8-sig')
 from briefing_render import render, metadata
+from theater_context import current as current_theater, marker as theater_marker, saved as saved_theater
 from military_terms import REVISION, spans as protected_spans
 from ollama_manager import Manager as OllamaManager, local_url
 ollama_manager=OllamaManager()
@@ -208,12 +209,17 @@ class Engine:
                     heading=section.find('h2')
                     saved_sections.append({'id':section.get('id',''),'title':next(heading.stripped_strings,'브리핑') if heading else '브리핑'})
                 error_count=len(restored.select('.error'))
-                self.state.update(id=identity,file=path.name,html=str(restored),status='저장된 한국어 브리핑' if not error_count else '저장된 브리핑 · 일부 영어 원문 유지',phase='partial' if error_count else 'complete',errors=error_count,revision=time.time(),sections=saved_sections,meta=metadata(parse(raw)[0].get_text()),provider=self.config['provider'],done=1,total=1)
+                self.state.update(id=identity,file=path.name,html=str(restored),status='저장된 한국어 브리핑' if not error_count else '저장된 브리핑 · 일부 영어 원문 유지',phase='partial' if error_count else 'complete',errors=error_count,revision=time.time(),sections=saved_sections,meta=metadata(parse(raw)[0].get_text())|{'theater':saved_theater(str(restored))},provider=self.config['provider'],done=1,total=1)
             return
         soup,nodes=parse(raw)
         if not nodes:raise ValueError('빈 브리핑입니다')
+        theater=current_theater(BMS_ROOT)
+        if old and old[0]==digest and Path(old[1]).is_file():
+            recorded=saved_theater(Path(old[1]).read_text('utf-8'))
+            if recorded.get('source')=='bms-registry':theater=recorded
+        context=theater_marker(theater)
         initial,sections=render(soup)
-        with self.lock:self.state=dict(id=identity,status='한국어 번역 준비 중',phase='translating',done=0,total=len(nodes),html=initial,file=path.name,sections=sections,meta=metadata(soup.get_text()),provider=self.config['provider'],errors=0,revision=time.time())
+        with self.lock:self.state=dict(id=identity,status='한국어 번역 준비 중',phase='translating',done=0,total=len(nodes),html=context+initial,file=path.name,sections=sections,meta=metadata(soup.get_text())|{'theater':theater},provider=self.config['provider'],errors=0,revision=time.time())
         now=time.monotonic()
         with self.lock:alive=any(now-t<15 for t in self.clients.values())
         if self.config['auto_open'] and (not alive or not self.config['reuse_window']) and now-self.last_open>15:
@@ -248,13 +254,13 @@ class Engine:
             en=soup.new_tag('span',attrs={'class':'en'});en.string=text
             span.append(kr);span.append(en);node.replace_with(span)
             body,sections=render(soup)
-            with self.lock:self.state.update(done=index+1,status=f'한국어 번역 중 {index+1}/{len(nodes)}',html=body,sections=sections,errors=errors)
+            with self.lock:self.state.update(done=index+1,status=f'한국어 번역 중 {index+1}/{len(nodes)}',html=context+body,sections=sections,errors=errors)
         status=f'일부 번역 실패 · 영어 원문 유지 {errors}건' if errors else '한국어 브리핑 준비 완료'
         output=Path(self.config['output_dir'])/(path.stem+'_'+identity+'_KR.html')
         if self.config['auto_save']:
             source=Path(self.config['watch_dir']).resolve();dest=output.resolve()
             if dest==path.resolve() or source==dest.parent or source in dest.parents:raise ValueError('출력 폴더는 원본 감시 폴더 밖이어야 합니다')
-            atomic(output,document(render(soup)[0],status))
+            atomic(output,document(context+render(soup)[0],status))
             with self.lock:
                 self.db.execute('INSERT OR REPLACE INTO history VALUES (?,?,?,?,?)',(identity,str(path),digest,str(output),time.time()))
                 self.db.execute('INSERT OR REPLACE INTO translation_versions VALUES (?,?)',(identity,REVISION));self.db.commit()

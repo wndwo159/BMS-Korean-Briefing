@@ -36,7 +36,7 @@ def render_pages(markup, max_pages=16):
         if tag.name in ('script','style','iframe','object','embed','link','meta','base','img','video','audio','svg','form','input','button'):
             tag.decompose();continue
         for attr in list(tag.attrs):
-            if attr not in ('class','id','colspan','rowspan','data-index'):del tag[attr]
+            if attr not in ('class','id','colspan','rowspan','data-index','data-bms-theater','hidden'):del tag[attr]
     if not soup.select('.briefing-section'):raise ValueError('PRINT 또는 기록에서 브리핑을 먼저 여세요.')
     resources=Path(__file__).parent
     css=(resources/'briefing.css').read_text('utf-8')
