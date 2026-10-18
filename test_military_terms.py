@@ -25,7 +25,7 @@ def test_israel_print_reviewed_cells_preserve_identifiers():
         'Panther5 (OCA STRIKE)':'Panther5 (공세 제공 타격(OCA STRIKE))',
         '-- Radar EW Dome':'-- EW 레이더 돔',
         '100%operational':'100% 가동 중',
-        'Intelligence reports the highest impact targets are:':'정보 보고에 따른 주요 타격 표적:',
+        'Intelligence reports the highest impact targets are:':'정보당국이 보고한 가장 큰 타격 효과를 기대할 수 있는 주요 표적은 다음과 같습니다:',
     }
     for en,kr in cases.items():
         result=reviewed_translation(en,main.TOKEN,{})

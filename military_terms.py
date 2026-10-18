@@ -1,7 +1,7 @@
 """Deterministic proper names shared by every translation provider."""
 import re
 
-REVISION = 'military-terms-v7'
+REVISION = 'military-terms-v8'
 TERMS = {
     'Pyeongtaek AAF': '평택 육군비행장(AAF)',
     'Pyeongtaek': '평택', 'Osan': '오산', 'Kunsan': '군산',

@@ -16,6 +16,7 @@ def reviewed_translation(text,token_pattern,glossary):
     except NeedsInference:return None
 
 LABELS = {
+'Airstrike':'공중 타격',
 'GENERAL':'일반 설정(GENERAL)','TIME EVENTS':'시각별 변경(TIME EVENTS)','POS EVENTS':'위치별 변경(POS EVENTS)','FILE A':'설정 파일(FILE A)','FILE B':'설정 파일(FILE B)','END_OF_BRIEFING':'브리핑 끝(END_OF_BRIEFING)','Mission Overview':'임무 개요','Situation':'전장 상황','Pilot Roster':'조종사 편성','Package Elements':'패키지 편성','Threat Analysis':'위협 분석','Steerpoints':'비행계획 / 스티어포인트','Comm Ladder':'통신 계획','Iff':'피아식별 (Iff)','Link 16':'데이터링크 Link 16','Ordnance':'무장 구성','Weather':'기상','Support':'지원 전력','Rules of Engagement':'교전 수칙','Emergency Procedures':'비상 절차',
 'Callsign':'호출부호','Flt Lead':'편대장','Wing Two':'윙맨','Elem Lead':'분대장','Elem Two':'분대 윙맨','Flt #':'편대 번호','Role':'임무 역할','Aircraft':'항공기','Task':'세부 임무','Package #':'패키지 번호','Pkg-Mission':'패키지 임무','Target Area':'표적 지역','Time on Target':'표적 도착시각','Sunrise':'일출','Sunset':'일몰',
 'Air-to-Air Threats':'공대공 위협','Surface-To-Air Threats':'지대공 위협','Desc':'설명','Time':'시각','Dist':'거리','Head':'방위','Cas':'보정대기속도','Alt':'고도','Action':'행동','Form':'대형','Comments':'비고','Agency':'통신 대상','Uhf [Chnl]':'Uhf [채널]','Vhf [Chnl]':'Vhf [채널]','Notes':'비고',

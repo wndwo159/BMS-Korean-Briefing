@@ -23,6 +23,10 @@ ollama_manager=OllamaManager()
 # BMS can join identifiers to prose (P-12or, M-1992anti-aircraft).
 # The lookahead branch has its own boundary so the actual identifier stays protected.
 TOKEN = re.compile(r'\b[A-Z]+-\d+(?=anti-aircraft\b|or\b)|\b(?:(?:Maj\.|Lt\.|Cpt\.|Capt\.|2Lt\.|1Lt\.)[ ]+[A-Za-z]+(?:[ ]+[A-Z][A-Za-z]+)*|[A-Za-z][A-Za-z0-9/-]*\d[A-Za-z0-9/.-]*|[A-Z]{2,}|\d+(?:[.:,/-]\d+)*(?:[A-Za-z]+)?)(?:\s+(?:MHz|FT|NM|KT|ft|nm|km|kts|deg|mm))?\b', re.ASCII)
+BRIEFING_STYLE = ('Write complete, natural Korean military briefing sentences. Preserve the meaning, negation, and uncertainty of the original; do not add facts or tactical instructions. '
+                 'In this military context Intelligence means 정보당국 or 첩보, not 지능; offensive means 공세; take a location means 점령; put a facility out of commission means 가동 불능 상태로 만들다. '
+                 'Distinguish electrical power from military strength. Preserve qualifiers such as probably, suspected, and no known; no known defenses does not mean no threat. '
+                 'Keep unknown proper names identifiable and never invent Korean place names. Preserve every __BMS_n__ placeholder exactly, once, and do not translate its contents. ')
 
 def atomic(path, text):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -171,11 +175,11 @@ class Engine:
                 masked_parts.append(f'__BMS_{len(protected_values)}__');protected_values.append(value)
             else:masked_parts.append(value)
         masked=''.join(masked_parts)
-        prompt='Translate ALL English text to Korean for Falcon BMS. Do not summarize. Preserve every __BMS_n__ placeholder exactly. Return JSON {"id":"text","translation":"..."}. Glossary (keep abbreviations): '+json.dumps(glossary,ensure_ascii=False)+'\n'+json.dumps({'id':'text','text':masked})
+        prompt='Translate ALL English text to Korean for Falcon BMS. Do not summarize. '+BRIEFING_STYLE+'Return JSON {"id":"text","translation":"..."}. Glossary (keep abbreviations): '+json.dumps(glossary,ensure_ascii=False)+'\n'+json.dumps({'id':'text','text':masked})
         if c['provider']=='ollama':
             if not c['model']:raise ValueError('설정에서 설치된 Ollama 모델을 선택하세요')
             if c['model'].split(':')[0]=='translategemma':
-                instruction='You are a professional English (en) to Korean (ko) translator. Preserve all __BMS_n__ placeholders exactly. Produce only the Korean translation, without additional explanations. Please translate the following English text into Korean:\n\n\n'+masked
+                instruction='You are a professional English (en) to Korean (ko) translator. '+BRIEFING_STYLE+'Produce only the Korean translation, without additional explanations. Please translate the following English text into Korean:\n\n\n'+masked
                 r=httpx.post(c['ollama_url']+'/api/chat',json={'model':c['model'],'messages':[{'role':'user','content':instruction}],'stream':False,'options':{'temperature':0}},timeout=180);r.raise_for_status()
                 result={'id':'text','translation':r.json()['message']['content']}
             else:

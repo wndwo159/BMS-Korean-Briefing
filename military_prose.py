@@ -1,6 +1,15 @@
 """Reviewed translations of recurring BMS PRINT sentences, with variable data retained."""
 import re
 
+PLACE_NAMES={'Bir Gifgafa':'비르 기프가파'}
+FACILITIES={'Turbine Building':'터빈 건물','Control Center':'제어 센터','Transformer':'변압기'}
+
+
+def power_plant(name):
+    # Only reviewed names receive a Korean reading; unknown names stay identifiable.
+    place=PLACE_NAMES.get(name)
+    return (f'{place}({name})' if place else name)+' 발전소'
+
 def location(text):
     m=re.fullmatch(r'(.+?\s+(?:nm|km|NM))\s+(northwest|northeast|southwest|southeast|north|south|west|east) of (.+)',text)
     if not m:return text
@@ -15,7 +24,9 @@ FIXED={
 'Clear sweep area of hostile aircraft':'소탕 구역 내 적기를 제거',
 'Box':'상자 대형','Fair':'대체로 맑음','Attack target':'표적 공격',
 'No support flights available.':'가용 지원 편대가 없습니다.',
-'Intelligence reports the highest impact targets are':'정보 보고에 따른 주요 타격 표적',
+'Intelligence reports the highest impact targets are':'정보당국이 보고한 가장 큰 타격 효과를 기대할 수 있는 주요 표적은 다음과 같습니다',
+'We would like to put the facility out of commission.':'따라서 우리는 이 시설을 공격하여 가동 불능 상태로 만들고자 합니다.',
+'There are no known enemy air defense assets along your flight path.':'비행 경로상에서 확인된 적 방공 전력은 없습니다.',
 'Destroy or other facilities at target site':'표적 지역의 기타 시설을 파괴',
 '-- Small Desert Bunker':'-- 소형 사막 벙커',
 'Enemy CAP aircraft are likely to be operating within operation area.':'작전 구역 내에서 적 전투초계(CAP) 항공기가 활동할 가능성이 있습니다.',
@@ -35,6 +46,19 @@ FIXED={
 def reviewed(text):
     if text in FIXED:return FIXED[text]
     if text.endswith(':') and text[:-1] in FIXED:return FIXED[text[:-1]]+':'
+    if text in FACILITIES:return FACILITIES[text]
+    if text.startswith('-- ') and text[3:] in FACILITIES:return '-- '+FACILITIES[text[3:]]
+    m=re.fullmatch(r'Be advised: Intelligence reports a large enemy offensive is in progress, probably with the intent to take (.+?)\.',text)
+    if m:
+        objective='목표 지역을 점령하는 것' if m[1] in ('target','the target') else m[1]+' 점령인 것'
+        return '주의: 정보당국에 따르면 현재 적군이 대규모 공세를 진행 중이며, 그 목적은 아마도 '+objective+'으로 추정됩니다.'
+    m=re.fullmatch(r"Intelligence claims the (.+?) Power Plant is producing a substantial portion of the enemy['’]s electrical power\.(\s+We would like to put the facility out of commission\.)?",text)
+    if m:
+        result='정보당국에 따르면 '+power_plant(m[1])+'는 적군이 사용하는 전력의 상당 부분을 생산하고 있습니다.'
+        if m[2]:result+=' 따라서 우리는 이 발전소를 공격하여 가동 불능 상태로 만들고자 합니다.'
+        return result
+    m=re.fullmatch(r'Strike (.+?) Power Plant',text)
+    if m:return power_plant(m[1])+' 타격'
     m=re.fullmatch(r'([A-Za-z][A-Za-z0-9]+) \((OCA STRIKE|STRIKE|SWEEP|ESCORT)\)',text)
     if m:return m[1]+' ('+FIXED[m[2]]+')'
     m=re.fullmatch(r'(\d+)%operational',text)
@@ -50,6 +74,8 @@ def reviewed(text):
     if m:return '-- '+m[1]+' 대공포 · '+m[2]+' 일대'
     m=re.fullmatch(r'Destroy (.+?)or other facilities at target site',text)
     if m:return m[1].strip()+' 또는 표적 지역의 기타 시설을 파괴'
+    m=re.fullmatch(r'Destroy (.+?)at target site',text)
+    if m:return '표적 지역의 '+FACILITIES.get(m[1].strip(),m[1].strip())+' 파괴'
     m=re.fullmatch(r'Strike (.+)',text)
     if m:return m[1]+' 타격'
     m=re.fullmatch(r'(-?\d+(?:\.\d+)?deg\s+C\.?)',text)
