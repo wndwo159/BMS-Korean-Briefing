@@ -21,6 +21,7 @@ def test_israel_print_reviewed_cells_preserve_identifiers():
         '4x Spice 2000':'4x Spice 2000',
         'Box':'상자 대형','Fair':'대체로 맑음',
         'Strike':'타격','OCA STRIKE':'공세 제공 타격(OCA STRIKE)',
+        'Strike enemy air defense assets':'적 방공 전력 타격',
         'Panther5 (OCA STRIKE)':'Panther5 (공세 제공 타격(OCA STRIKE))',
         '-- Radar EW Dome':'-- EW 레이더 돔',
         '100%operational':'100% 가동 중',

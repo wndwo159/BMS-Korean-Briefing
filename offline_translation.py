@@ -80,11 +80,11 @@ class OfflineTranslator:
                 result.append(leading+equipment+trailing);continue
             core=stripped
             if core.endswith(':'):core=core[:-1].rstrip();suffix=':'
+            if core in LABELS:
+                result.append(leading+LABELS[core]+suffix+trailing);continue
             known=reviewed(stripped)
             if known is not None:
                 result.append(leading+replace_known(known)+trailing);continue
-            if core in LABELS:
-                result.append(leading+LABELS[core]+suffix+trailing);continue
             translated=[]
             for protected,value in spans(stripped,token_pattern,glossary):
                 if protected:translated.append(glossary.get(value,value));continue
