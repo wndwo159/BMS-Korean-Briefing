@@ -73,6 +73,9 @@ ConvertTo-Json -InputObject $result -Compress
 
 
 def powershell(script, plan):
+    if 'New-Object -ComObject WScript.Shell' in script:
+        from shell_link import UNICODE_SHELL
+        script=UNICODE_SHELL+script.replace('New-Object -ComObject WScript.Shell','New-Object BmsShell')
     env = dict(os.environ, BMS_KR_PLAN=json.dumps(plan, ensure_ascii=True))
     result = subprocess.run(
         ['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', script],

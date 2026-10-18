@@ -13,6 +13,6 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & '.\.venv\Scripts\python.exe' prepare_release.py
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-& '.\.venv\Scripts\python.exe' -m PyInstaller --noconfirm --onefile --windowed --name BMS-Korean-Briefing-Setup --add-data 'payload;payload' installer.py
+& '.\.venv\Scripts\python.exe' -m PyInstaller --noconfirm BMS-Korean-Briefing-Setup.spec
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & '.\.venv\Scripts\python.exe' prepare_release.py --package
